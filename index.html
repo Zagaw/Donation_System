@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Donation System - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f9fafb;
+        }
+        
+        #root {
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- React Libraries -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Our Components -->
+    <script type="text/babel" data-presets="react" data-type="module">
+        // Import components
+        const { useState } = React;
+        
+        // Import our components
+        import('./dashboard.jsx').then(module => window.Dashboard = module.default);
+        import('./Sidebar.jsx').then(module => window.Sidebar = module.default);
+        import('./Header.jsx').then(module => window.Header = module.default);
+        import('./App.js').then(module => window.App = module.default);
+        
+        // Render app
+        ReactDOM.createRoot(document.getElementById('root')).render(
+            React.createElement(window.App)
+        );
+    </script>
+</body>
+</html>
