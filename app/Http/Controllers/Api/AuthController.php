@@ -77,6 +77,21 @@ class AuthController extends Controller
         ]);
     }
 
+    public function me(Request $request)
+    {
+        $user = $request->user()->load('donor', 'receiver');
+
+        return response()->json([
+            'user' => $user,
+            'redirect' => match ($user->role) {
+                'admin' => '/admin/dashboard',
+                'donor' => '/donor/donations',
+                'receiver' => '/receiver/requests',
+            }
+        ]);
+    }
+
+
     // UPDATE PROFILE
     public function update(Request $request)
     {
