@@ -14,10 +14,27 @@ class DonationController extends Controller
         $request->validate([
             'itemName' => 'required|string',
             'quantity' => 'required|integer|min:1',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+
+             // optional fields
+            'nrcNumber' => 'nullable|string',
+            'nrcFrontImage' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'nrcBackImage' => 'nullable|image|mimes:jpg,png,jpeg|max:2048'
         ]);
 
         $donor = $request->user()->donor;
+
+        // Upload images if exist
+        $frontPath = null;
+        $backPath = null;
+
+        if ($request->hasFile('nrcFrontImage')) {
+            $frontPath = $request->file('nrcFrontImage')->store('nrc', 'public');
+        }
+
+        if ($request->hasFile('nrcBackImage')) {
+            $backPath = $request->file('nrcBackImage')->store('nrc', 'public');
+        }
 
         $donation = Donation::create([
             'donorId' => $donor->id,
@@ -25,7 +42,10 @@ class DonationController extends Controller
             'itemName' => $request->itemName,
             'quantity' => $request->quantity,
             'description' => $request->description,
-            'status' => 'pending'
+            'status' => 'pending',
+            'nrcNumber' => $request->nrcNumber,
+            'nrcFrontImage' => $frontPath,
+            'nrcBackImage' => $backPath
         ]);
 
         return response()->json([

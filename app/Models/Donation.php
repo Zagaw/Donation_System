@@ -14,7 +14,10 @@ class Donation extends Model
         'category',
         'quantity',
         'description',
-        'status'
+        'status',
+        'nrcNumber',
+        'nrcFrontImage',
+        'nrcBackImage'
     ];
 
     public function donor()
