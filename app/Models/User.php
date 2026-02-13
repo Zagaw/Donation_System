@@ -34,4 +34,25 @@ class User extends Authenticatable
     {
         return $this->hasOne(Receiver::class, 'userId');
     }
+
+    public function donatedMatches()
+    {
+    return $this->hasMany(DonationMatch::class, 'donor_id');
+    }
+
+    public function receivedMatches()
+    {
+    return $this->hasMany(DonationMatch::class, 'receiver_id');
+    }
+
+    public function donations()
+    {
+    return $this->hasMany(Donation::class, 'donorId');
+    }
+
+    public function requests() 
+    {
+    return $this->hasMany(Request::class, 'receiverId');
+    }
+
 }

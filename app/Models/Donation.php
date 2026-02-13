@@ -24,5 +24,11 @@ class Donation extends Model
     {
         return $this->belongsTo(Donor::class, 'donorId');
     }
+
+    public function matches()
+    {
+    return $this->hasMany(DonationMatch::class);
+    }
+
 }
 

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('donorId')
-                ->references('id')->on('donors')
+                ->references('userId')->on('users')
                 ->onDelete('cascade');
         });
 

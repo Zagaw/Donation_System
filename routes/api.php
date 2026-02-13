@@ -35,5 +35,10 @@ Route::middleware(['auth:sanctum', 'role:donor'])->prefix('donor')->group(functi
     Route::delete('/donations/{id}', [DonationController::class, 'destroy']);
 });
 
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/admin/match', [MatchController::class, 'match']);
+});
+
+
 
 
