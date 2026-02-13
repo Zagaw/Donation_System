@@ -1,39 +1,24 @@
-<?php
-
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\DonationController;
-
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+use App\Http\Controllers\Api\FeedbackController;
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::put('/update-profile', [AuthController::class, 'update']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me', [AuthController::class, 'me']);
+
+    // Donor feedback
+    Route::middleware('role:donor')->prefix('donor')->group(function () {
+        Route::post('/feedback', [FeedbackController::class, 'store']);
+    });
+
+    // Receiver feedback
+    Route::middleware('role:receiver')->prefix('receiver')->group(function () {
+        Route::post('/feedback', [FeedbackController::class, 'store']);
+    });
+
+    // Admin feedback management
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/feedback', [FeedbackController::class, 'index']);
+        Route::get('/feedback/stats', [FeedbackController::class, 'stats']);
+        Route::get('/feedback/{id}', [FeedbackController::class, 'show']);
+        Route::post('/feedback/{id}/reply', [FeedbackController::class, 'reply']);
+        Route::delete('/feedback/{id}', [FeedbackController::class, 'destroy']);
+    });
+
 });
-
-Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
-    Route::get('/admin/users', [AdminController::class, 'allUsers']);
-    // Donations
-    Route::get('/donations/pending', [AdminController::class, 'pendingDonations']);
-    Route::post('/donations/{id}/approve', [AdminController::class, 'approveDonation']);
-    Route::post('/donations/{id}/reject', [AdminController::class, 'rejectDonation']);
-});
-
-Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(function () {
-    Route::post('/requests', [ReceiverController::class, 'createRequest']);
-    Route::get('/requests', [ReceiverController::class, 'myRequests']);
-    Route::post('/feedback', [ReceiverController::class, 'submitFeedback']);
-});
-
-Route::middleware(['auth:sanctum', 'role:donor'])->prefix('donor')->group(function () {
-    Route::post('/donations', [DonationController::class, 'store']);
-    Route::get('/donations', [DonationController::class, 'myDonations']);
-    Route::delete('/donations/{id}', [DonationController::class, 'destroy']);
-});
-
-
-
