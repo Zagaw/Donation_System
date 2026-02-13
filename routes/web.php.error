@@ -1,0 +1,50 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+
+// Your other routes...
+Route::get('/ping', function() {
+    return response()->json(['message' => 'pong']);
+});
+
+// TEST CERTIFICATE ROUTE - ADD THIS!
+Route::get('/test-certificate', function() {
+    try {
+        $checks = [
+            'dompdf_installed' => class_exists('Dompdf\Dompdf'),
+            'certificate_service' => class_exists('App\Services\CertificateService'),
+            'certificate_controller' => class_exists('App\Http\Controllers\Admin\CertificateController'),
+            'certificate_model' => class_exists('App\Models\Certificate'),
+            'certificates_table' => Schema::hasTable('certificates'),
+            'storage_link' => is_dir(public_path('storage')),
+            'certificates_dir' => Storage::disk('public')->exists('certificates'),
+            'certificate_template' => view()->exists('certificates.template'),
+        ];
+        
+        return response()->json($checks);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
+// Admin Certificate Routes
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('/certificates', [App\Http\Controllers\Admin\CertificateController::class, 'index'])
+        ->name('admin.certificates.index');
+    Route::get('/certificates/{certificate}', [App\Http\Controllers\Admin\CertificateController::class, 'show'])
+        ->name('admin.certificates.show');
+    Route::get('/certificates/{certificate}/download', [App\Http\Controllers\Admin\CertificateController::class, 'download'])
+        ->name('admin.certificates.download');
+    Route::get('/certificates/{certificate}/regenerate', [App\Http\Controllers\Admin\CertificateController::class, 'regenerate'])
+        ->name('admin.certificates.regenerate');
+    Route::delete('/certificates/{certificate}/revoke', [App\Http\Controllers\Admin\CertificateController::class, 'revoke'])
+        ->name('admin.certificates.revoke');
+    Route::get('/donations/{donation}/generate-certificate', [App\Http\Controllers\Admin\CertificateController::class, 'generate'])
+        ->name('admin.certificates.generate');
+});
