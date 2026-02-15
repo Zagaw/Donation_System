@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Donation extends Model
+class Request extends Model
 {
-    protected $primaryKey = 'donationId';
+    protected $primaryKey = 'requestId';
 
     protected $fillable = [
-        'donorId',
+        'receiverId',
         'itemName',
         'category',
         'quantity',
@@ -25,9 +25,14 @@ class Donation extends Model
         'nrc_back_url'
     ];
 
-    public function donor()
+    public function receiver()
     {
-        return $this->belongsTo(Donor::class, 'donorId');
+        return $this->belongsTo(Receiver::class, 'receiverId');
+    }
+
+    public function interests()
+    {
+        return $this->hasMany(Interest::class, 'requestId');
     }
 
     // Accessor for NRC Front Image

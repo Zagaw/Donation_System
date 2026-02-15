@@ -8,6 +8,7 @@ use App\Models\Donor;
 use App\Models\Receiver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -84,16 +85,16 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'redirect' => match ($user->role) {
-                'admin' => '/admin/dashboard',
-                'donor' => '/donor/donations',
-                'receiver' => '/receiver/requests',
+                'admin' => '/admin',
+                'donor' => '/donor',
+                'receiver' => '/receiver',
             }
         ]);
     }
 
 
     // UPDATE PROFILE
-    public function update(Request $request)
+    /*public function update(Request $request)
     {
         $user = $request->user();
 
@@ -105,6 +106,69 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Profile updated',
+            'user' => $user
+        ]);
+    }*/
+
+        // UPDATE PROFILE
+    public function update(Request $request)
+    {
+        $user = $request->user();
+
+        $rules = [
+            'name' => 'sometimes|string|max:255',
+            'email' => [
+                'sometimes',
+                'email',
+                Rule::unique('users')->ignore($user->userId, 'userId'),
+            ],
+            'phone' => 'sometimes|string|max:20',
+            'address' => 'sometimes|string|max:500',
+            'current_password' => 'required_with:new_password|string',
+            'new_password' => 'sometimes|string|min:6|confirmed',
+        ];
+
+        $request->validate($rules);
+
+        $updateData = [];
+
+        // Update basic info if provided
+        if ($request->has('name')) {
+            $updateData['name'] = $request->name;
+        }
+
+        if ($request->has('email')) {
+            $updateData['email'] = $request->email;
+        }
+
+        if ($request->has('phone')) {
+            $updateData['phone'] = $request->phone;
+        }
+
+        if ($request->has('address')) {
+            $updateData['address'] = $request->address;
+        }
+
+        // Handle password update
+        if ($request->has('new_password')) {
+            // Verify current password
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'message' => 'Current password is incorrect'
+                ], 422);
+            }
+
+            $updateData['password'] = Hash::make($request->new_password);
+        }
+
+        // Update user
+        $user->update($updateData);
+
+        // Reload user with relationships
+        $user->load('donor', 'receiver');
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
             'user' => $user
         ]);
     }

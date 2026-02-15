@@ -12,7 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('donations', function (Blueprint $table) {
-            $table->string('category')->after('donorId');
+            $table->string('status')->default('pending')->change();
+        });
+
+        Schema::table('requests', function (Blueprint $table) {
+            $table->string('status')->default('pending')->change();
+        });
+
+        Schema::table('matches', function (Blueprint $table) {
+            $table->string('status')->default('approved')->change();
         });
     }
 
@@ -21,7 +29,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('donations', function (Blueprint $table) {
+        Schema::table('string', function (Blueprint $table) {
             //
         });
     }

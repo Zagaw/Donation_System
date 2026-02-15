@@ -11,23 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('donations', function (Blueprint $table) {
-            $table->id('donationId');
-            $table->unsignedBigInteger('donorId');
+        Schema::create('requests', function (Blueprint $table) {
+            $table->id('requestId');
+            $table->unsignedBigInteger('receiverId');
+
             $table->string('itemName');
             $table->string('category');
             $table->integer('quantity');
             $table->text('description')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected', 'matched', 'executed', 'completed'])
-          ->default('pending');
-            // pending | approved | matched | completed
+
+            // REQUIRED NRC fields
+            $table->string('nrcNumber');
+            $table->string('nrcFrontImage');
+            $table->string('nrcBackImage');
+
+            $table->enum('status', ['pending', 'approved', 'rejected',  'matched', 'executed', 'completed'])
+                  ->default('pending');
+
             $table->timestamps();
 
-            $table->foreign('donorId')
-                ->references('id')->on('donors')
+            $table->foreign('receiverId')
+                ->references('id')->on('receivers')
                 ->onDelete('cascade');
         });
-
     }
 
     /**
@@ -35,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('donations');
+        Schema::dropIfExists('requests');
     }
 };
