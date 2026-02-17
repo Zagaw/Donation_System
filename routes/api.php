@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\InterestController;
 use App\Http\Controllers\Api\AdminMatchController;
 use App\Http\Controllers\Api\AdminExecutionController;
+use App\Http\Controllers\Api\NotificationController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -16,6 +17,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/update-profile', [AuthController::class, 'update']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
+
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+    Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
@@ -56,6 +66,18 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('/interests/{id}/reject', [AdminController::class, 'rejectInterest']);
 
      // matching
+    Route::get('/matches', [AdminMatchController::class, 'getAllMatches']);
+    Route::get('/matches/approved', [AdminMatchController::class, 'getApprovedMatches']);
+    Route::get('/matches/executed', [AdminMatchController::class, 'getExecutedMatches']);
+    Route::get('/matches/completed', [AdminMatchController::class, 'getCompletedMatches']);
+    Route::get('/matches/{id}', [AdminMatchController::class, 'getMatchDetails']);
+    
+    // Matching data
+    Route::get('/matching/approved-donations', [AdminMatchController::class, 'getApprovedDonations']);
+    Route::get('/matching/approved-requests', [AdminMatchController::class, 'getApprovedRequests']);
+    Route::get('/matching/approved-interests', [AdminMatchController::class, 'getApprovedInterests']);
+    Route::get('/matching/matched-interests', [AdminMatchController::class, 'getMatchedInterests']); // New route
+    
     Route::post('/match/interest/{interestId}', [AdminMatchController::class, 'matchByInterest']);
 
     Route::post('/match/manual', [AdminMatchController::class, 'manualMatch']);

@@ -16,6 +16,7 @@ return new class extends Migration {
                 'pending',
                 'approved',
                 'rejected',
+                'matched',
                 'completed'
             ])->default('pending');
 

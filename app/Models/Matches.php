@@ -13,6 +13,22 @@ class Matches extends Model
         'donationId',
         'requestId',
         'interestId',
-        'status'
+        'status',
+        'matchType'
     ];
+
+     public function donation()
+    {
+        return $this->belongsTo(Donation::class, 'donationId');
+    }
+
+    public function request()
+    {
+        return $this->belongsTo(Request::class, 'requestId');
+    }
+
+    public function interest()
+    {
+        return $this->belongsTo(Interest::class, 'interestId');
+    }
 }

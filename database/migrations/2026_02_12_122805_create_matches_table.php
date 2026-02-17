@@ -20,7 +20,7 @@ return new class extends Migration
             // nullable → manual matching has no interest
             $table->unsignedBigInteger('interestId')->nullable();
 
-            $table->enum('matchType', ['interest', 'manual']);
+            $table->enum('matchType', ['interest', 'manual'])->default('manual');
 
             $table->enum('status', ['approved', 'executed', 'completed'])
                 ->default('approved');
