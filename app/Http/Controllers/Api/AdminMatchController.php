@@ -359,4 +359,39 @@ class AdminMatchController extends Controller
             ], 500);
         }
     }
+
+    public function getMatchForUser($id)
+    {
+        try {
+            $user = auth()->user();
+            
+            $match = Matches::with([
+                'donation.donor.user',
+                'request.receiver.user',
+                'interest.donor.user'
+            ])
+            ->where('matchId', $id)
+            ->firstOrFail();
+            
+            // Security check: Ensure the user is part of this match
+            $isDonor = $match->donation && $match->donation->donor->user->userId === $user->userId;
+            $isReceiver = $match->request && $match->request->receiver->user->userId === $user->userId;
+            $isInterestDonor = $match->interest && $match->interest->donor->user->userId === $user->userId;
+            
+            if (!$isDonor && !$isReceiver && !$isInterestDonor && $user->role !== 'admin') {
+                return response()->json([
+                    'message' => 'Unauthorized to view this match'
+                ], 403);
+            }
+            
+            return response()->json([
+                'match' => $match
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching match details',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
