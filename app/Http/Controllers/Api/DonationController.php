@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Donation;
+use App\Models\Matches; // Add this line
+use App\Models\Interest;
 use Illuminate\Http\Request;
 
 class DonationController extends Controller
@@ -59,7 +61,20 @@ class DonationController extends Controller
     {
         $donor = $request->user()->donor;
 
-        return Donation::where('donorId', $donor->id)->get();
+        return Donation::where('donorId', $donor->id)->orderBy('created_at', 'desc')->get();
+    }
+
+    // New method for detailed view (returns wrapped object)
+    public function myDonationsWithDetails(Request $request)
+    {
+        $donor = $request->user()->donor;
+        $donations = Donation::where('donorId', $donor->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'donations' => $donations // Wrapped in object
+        ]);
     }
 
     // DELETE DONATION
@@ -76,6 +91,97 @@ class DonationController extends Controller
         return response()->json([
             'message' => 'Donation deleted successfully'
         ]);
+    }
+
+    // VIEW MY MATCHES (as donor) - FIXED VERSION
+    public function myMatches(Request $request)
+    {
+        try {
+            $donor = $request->user()->donor;
+            
+            if (!$donor) {
+                return response()->json([
+                    'message' => 'Donor profile not found'
+                ], 404);
+            }
+
+            // Get donation IDs for this donor
+            $donationIds = Donation::where('donorId', $donor->id)
+                ->pluck('donationId')
+                ->toArray();
+
+            // Get interest IDs for this donor
+            $interestIds = Interest::where('donorId', $donor->id)
+                ->pluck('interestId')
+                ->toArray();
+
+            $matches = Matches::with([
+                'donation',
+                'request.receiver.user',
+                'interest'
+            ])
+            ->where(function($query) use ($donationIds, $interestIds) {
+                $query->whereIn('donationId', $donationIds)
+                    ->orWhereIn('interestId', $interestIds);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+            return response()->json([
+                'matches' => $matches
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching matches',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
+    }
+
+    // VIEW SINGLE MATCH DETAILS FOR DONOR
+    public function getDonorMatchDetails($id)
+    {
+        try {
+            $donor = auth()->user()->donor;
+            
+            if (!$donor) {
+                return response()->json([
+                    'message' => 'Donor profile not found'
+                ], 404);
+            }
+
+            $match = Matches::with([
+                'donation',
+                'request.receiver.user',
+                'interest'
+            ])
+            ->where('matchId', $id)
+            ->where(function($query) use ($donor) {
+                $query->whereHas('donation', function($q) use ($donor) {
+                    $q->where('donorId', $donor->id);
+                })->orWhereHas('interest', function($q) use ($donor) {
+                    $q->where('donorId', $donor->id);
+                });
+            })
+            ->first();
+
+            if (!$match) {
+                return response()->json([
+                    'message' => 'Match not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'match' => $match
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching match details',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
 

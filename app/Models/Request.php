@@ -35,6 +35,11 @@ class Request extends Model
         return $this->hasMany(Interest::class, 'requestId');
     }
 
+    public function matches()
+    {
+        return $this->hasMany(Matches::class, 'requestId');
+    }
+
     // Accessor for NRC Front Image
     public function getNrcFrontUrlAttribute()
     {

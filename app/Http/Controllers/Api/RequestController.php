@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Request;
+use App\Models\Matches; // Add this line
+use App\Models\Interest;
 use Illuminate\Http\Request as HttpRequest;
 
 class RequestController extends Controller
@@ -57,7 +59,20 @@ class RequestController extends Controller
     {
         $receiver = $request->user()->receiver;
 
-        return Request::where('receiverId', $receiver->id)->get();
+        return Request::where('receiverId', $receiver->id)->orderBy('created_at', 'desc')->get();
+    }
+
+    // New method for detailed view (returns wrapped object)
+    public function myRequestsWithDetails(HttpRequest $request)
+    {
+        $receiver = $request->user()->receiver;
+        $requests = Request::where('receiverId', $receiver->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'requests' => $requests // Wrapped in object
+        ]);
     }
 
     // DELETE REQUEST
@@ -74,6 +89,86 @@ class RequestController extends Controller
         return response()->json([
             'message' => 'Request deleted successfully'
         ]);
+    }
+
+    // VIEW MY MATCHES (as receiver) - FIXED VERSION
+    public function myMatches(HttpRequest $request)
+    {
+        try {
+            $receiver = $request->user()->receiver;
+            
+            if (!$receiver) {
+                return response()->json([
+                    'message' => 'Receiver profile not found'
+                ], 404);
+            }
+
+            // First, get all request IDs for this receiver
+            $requestIds = Request::where('receiverId', $receiver->id)
+                ->pluck('requestId')
+                ->toArray();
+
+            // Then get matches for those request IDs
+            $matches = Matches::with([
+                'donation.donor.user',
+                'request',
+                'interest.donor.user'
+            ])
+            ->whereIn('requestId', $requestIds)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+            return response()->json([
+                'matches' => $matches
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching matches',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
+    }
+
+    // VIEW SINGLE MATCH DETAILS FOR RECEIVER
+    public function getReceiverMatchDetails($id)
+    {
+        try {
+            $receiver = auth()->user()->receiver;
+            
+            if (!$receiver) {
+                return response()->json([
+                    'message' => 'Receiver profile not found'
+                ], 404);
+            }
+
+            $match = Matches::with([
+                'donation.donor.user',
+                'request',
+                'interest.donor.user'
+            ])
+            ->where('matchId', $id)
+            ->whereHas('request', function($query) use ($receiver) {
+                $query->where('receiverId', $receiver->id);
+            })
+            ->first();
+
+            if (!$match) {
+                return response()->json([
+                    'message' => 'Match not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'match' => $match
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching match details',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

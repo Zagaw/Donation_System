@@ -106,7 +106,11 @@ Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(
 Route::middleware(['auth:sanctum', 'role:donor'])->prefix('donor')->group(function () {
     Route::post('/donations', [DonationController::class, 'store']);
     Route::get('/donations', [DonationController::class, 'myDonations']);
+    Route::get('/donations/details', [DonationController::class, 'myDonationsWithDetails']); // NEW: for detailed view (wrapped)
     Route::delete('/donations/{id}', [DonationController::class, 'destroy']);
+
+    Route::get('/matches', [DonationController::class, 'myMatches']);
+    Route::get('/matches/{id}', [DonationController::class, 'getDonorMatchDetails']);
 
      // Add this line for donors to view approved requests
     Route::get('/requests/approved', [RequestController::class, 'approvedRequests']);
@@ -120,7 +124,12 @@ Route::middleware(['auth:sanctum', 'role:donor'])->prefix('donor')->group(functi
 Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(function () {
     Route::post('/requests', [RequestController::class, 'store']);
     Route::get('/requests', [RequestController::class, 'myRequests']);
+    Route::get('/requests/details', [RequestController::class, 'myRequestsWithDetails']); // NEW: for detailed view (wrapped)
     Route::delete('/requests/{id}', [RequestController::class, 'destroy']);
+
+    // New routes for receiver matches
+    Route::get('/matches', [RequestController::class, 'myMatches']);
+    Route::get('/matches/{id}', [RequestController::class, 'getReceiverMatchDetails']);
 });
 
 

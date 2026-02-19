@@ -30,6 +30,11 @@ class Donation extends Model
         return $this->belongsTo(Donor::class, 'donorId');
     }
 
+    public function matches()
+    {
+        return $this->hasMany(Matches::class, 'donationId');
+    }
+
     // Accessor for NRC Front Image
     public function getNrcFrontUrlAttribute()
     {
