@@ -183,5 +183,52 @@ class DonationController extends Controller
             ], 500);
         }
     }
-}
 
+    /**
+ * Donor requests to mark match as executed
+ */
+    public function requestExecution($matchId)
+    {
+        try {
+            $donor = auth()->user()->donor;
+            
+            $match = Matches::where('matchId', $matchId)
+                ->where(function($query) use ($donor) {
+                    $query->whereHas('donation', function($q) use ($donor) {
+                        $q->where('donorId', $donor->id);
+                    })->orWhereHas('interest', function($q) use ($donor) {
+                        $q->where('donorId', $donor->id);
+                    });
+                })
+                ->first();
+
+            if (!$match) {
+                return response()->json([
+                    'message' => 'Match not found'
+                ], 404);
+            }
+
+            if ($match->status !== 'approved') {
+                return response()->json([
+                    'message' => 'Only approved matches can be requested for execution'
+                ], 400);
+            }
+
+            // Set the execution requested flag
+            $match->execution_requested = true;
+            $match->execution_requested_by = 'donor';
+            $match->execution_requested_at = now();
+            $match->save();
+
+            return response()->json([
+                'message' => 'Execution request sent to admin successfully',
+                'match' => $match
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error sending request',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+}

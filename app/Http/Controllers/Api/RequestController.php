@@ -209,4 +209,48 @@ class RequestController extends Controller
             ], 500);
         }
     }
+
+    /**
+ * Receiver requests to mark match as executed
+ */
+    public function requestExecution($matchId)
+    {
+        try {
+            $receiver = auth()->user()->receiver;
+            
+            $match = Matches::where('matchId', $matchId)
+                ->whereHas('request', function($q) use ($receiver) {
+                    $q->where('receiverId', $receiver->id);
+                })
+                ->first();
+
+            if (!$match) {
+                return response()->json([
+                    'message' => 'Match not found'
+                ], 404);
+            }
+
+            if ($match->status !== 'approved') {
+                return response()->json([
+                    'message' => 'Only approved matches can be requested for execution'
+                ], 400);
+            }
+
+            // Set the execution requested flag
+            $match->execution_requested = true;
+            $match->execution_requested_by = 'receiver';
+            $match->execution_requested_at = now();
+            $match->save();
+
+            return response()->json([
+                'message' => 'Execution request sent to admin successfully',
+                'match' => $match
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error sending request',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

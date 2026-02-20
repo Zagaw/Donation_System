@@ -112,6 +112,8 @@ Route::middleware(['auth:sanctum', 'role:donor'])->prefix('donor')->group(functi
     Route::get('/matches', [DonationController::class, 'myMatches']);
     Route::get('/matches/{id}', [DonationController::class, 'getDonorMatchDetails']);
 
+    Route::post('/matches/{matchId}/request-execution', [DonationController::class, 'requestExecution']);
+
      // Add this line for donors to view approved requests
     Route::get('/requests/approved', [RequestController::class, 'approvedRequests']);
 
@@ -130,6 +132,8 @@ Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(
     // New routes for receiver matches
     Route::get('/matches', [RequestController::class, 'myMatches']);
     Route::get('/matches/{id}', [RequestController::class, 'getReceiverMatchDetails']);
+
+    Route::post('/matches/{matchId}/request-execution', [RequestController::class, 'requestExecution']);
 });
 
 

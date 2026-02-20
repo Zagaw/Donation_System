@@ -14,7 +14,14 @@ class Matches extends Model
         'requestId',
         'interestId',
         'status',
-        'matchType'
+        'matchType',
+    ];
+
+    protected $casts = [
+        'execution_requested' => 'boolean',
+        'completion_requested' => 'boolean',
+        'execution_requested_at' => 'datetime',
+        'completion_requested_at' => 'datetime'
     ];
 
      public function donation()

@@ -26,6 +26,15 @@ class AdminExecutionController extends Controller
             $donation->save();
         }
 
+        $request = ReceiverRequest::where('requestId', $match->requestId)->firstOrFail();
+        $request->status = 'executed';
+        $request->save();
+
+                // Clear execution_requested flag if it was set
+        $match->execution_requested = false;
+        $match->execution_requested_by = null;
+        $match->execution_requested_at = null;
+
         $match->status = 'executed';
         $match->save();
 
