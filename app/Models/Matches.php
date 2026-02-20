@@ -38,4 +38,9 @@ class Matches extends Model
     {
         return $this->belongsTo(Interest::class, 'interestId');
     }
+
+    public function certificate()
+    {
+        return $this->hasOne(Certificate::class, 'matchId');
+    }
 }

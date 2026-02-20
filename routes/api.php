@@ -9,6 +9,10 @@ use App\Http\Controllers\Api\InterestController;
 use App\Http\Controllers\Api\AdminMatchController;
 use App\Http\Controllers\Api\AdminExecutionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\AdminCertificateController;
+use App\Http\Controllers\Api\DonorCertificateController;
+use App\Http\Controllers\Api\FeedbackController;
+use App\Http\Controllers\Api\AdminFeedbackController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,6 +30,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
     Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll']);
+
+    // Feedback routes (accessible by both donors and receivers)
+    Route::get('/feedback/my-feedback', [FeedbackController::class, 'myFeedback']);
+    Route::get('/feedback/eligible-matches', [FeedbackController::class, 'getEligibleMatches']);
+    Route::post('/feedback', [FeedbackController::class, 'store']);
+    Route::put('/feedback/{id}', [FeedbackController::class, 'update']);
+    Route::delete('/feedback/{id}', [FeedbackController::class, 'destroy']);
 
     Route::get('/matches/{id}', [AdminMatchController::class, 'getMatchForUser']);
 });
@@ -95,6 +106,22 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
         AdminExecutionController::class,
         'completeMatch'
     ]);
+
+    Route::get('/certificates/eligible-matches', [AdminCertificateController::class, 'getEligibleMatches']);
+    Route::get('/certificates', [AdminCertificateController::class, 'getAllCertificates']);
+    Route::post('/certificates/generate', [AdminCertificateController::class, 'generateCertificate']);
+    Route::get('/certificates/{id}/download', [AdminCertificateController::class, 'downloadCertificate']);
+    Route::delete('/certificates/{id}', [AdminCertificateController::class, 'deleteCertificate']);
+
+    // Feedback Management
+    Route::get('/feedback', [AdminFeedbackController::class, 'index']);
+    Route::get('/feedback/statistics', [AdminFeedbackController::class, 'statistics']);
+    Route::get('/feedback/{id}', [AdminFeedbackController::class, 'show']);
+    Route::post('/feedback/{id}/approve', [AdminFeedbackController::class, 'approve']);
+    Route::post('/feedback/{id}/reject', [AdminFeedbackController::class, 'reject']);
+    Route::post('/feedback/{id}/feature', [AdminFeedbackController::class, 'feature']);
+    Route::post('/feedback/{id}/respond', [AdminFeedbackController::class, 'respond']);
+    Route::delete('/feedback/{id}', [AdminFeedbackController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(function () {
@@ -121,6 +148,11 @@ Route::middleware(['auth:sanctum', 'role:donor'])->prefix('donor')->group(functi
     Route::post('/requests/{id}/interest', [InterestController::class, 'store']);
     Route::get('/interests', [InterestController::class, 'myInterests']);
     Route::delete('/interests/{id}', [InterestController::class, 'destroy']);
+
+     // Certificates
+    Route::get('/certificates', [DonorCertificateController::class, 'myCertificates']);
+    Route::get('/certificates/{id}', [DonorCertificateController::class, 'getCertificate']);
+    Route::get('/certificates/{id}/download', [DonorCertificateController::class, 'downloadCertificate']);
 });
 
 Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(function () {
