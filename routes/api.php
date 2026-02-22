@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\AdminCertificateController;
 use App\Http\Controllers\Api\DonorCertificateController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\AdminFeedbackController;
+use App\Http\Controllers\Api\ReportsController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -122,6 +123,18 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('/feedback/{id}/feature', [AdminFeedbackController::class, 'feature']);
     Route::post('/feedback/{id}/respond', [AdminFeedbackController::class, 'respond']);
     Route::delete('/feedback/{id}', [AdminFeedbackController::class, 'destroy']);
+
+    Route::get('/reports/overview', [ReportsController::class, 'getOverview']);
+    Route::get('/reports/monthly-activity', [ReportsController::class, 'getMonthlyActivity']);
+    Route::get('/reports/category-distribution', [ReportsController::class, 'getCategoryDistribution']);
+    Route::get('/reports/user-growth', [ReportsController::class, 'getUserGrowth']);
+    Route::get('/reports/donation-stats', [ReportsController::class, 'getDonationStats']);
+    Route::get('/reports/request-stats', [ReportsController::class, 'getRequestStats']);
+    Route::get('/reports/match-stats', [ReportsController::class, 'getMatchStats']);
+    Route::get('/reports/feedback-stats', [ReportsController::class, 'getFeedbackStats']);
+    Route::post('/reports/generate', [ReportsController::class, 'generateReport']);
+    Route::get('/reports/saved', [ReportsController::class, 'getSavedReports']);
+    Route::get('/reports/download-csv', [ReportsController::class, 'downloadCSV']);
 });
 
 Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(function () {
