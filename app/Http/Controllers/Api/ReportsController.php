@@ -11,6 +11,9 @@ use App\Models\Interest;
 use App\Models\Feedback;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Report;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class ReportsController extends Controller
 {
@@ -310,7 +313,7 @@ class ReportsController extends Controller
     /**
      * Get saved reports
      */
-    public function getSavedReports()
+    /*public function getSavedReports()
     {
         try {
             // This could be stored in a database table
@@ -354,7 +357,7 @@ class ReportsController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
-    }
+    }*/
 
     // Helper methods
     private function calculateChange($previous, $current)
@@ -686,6 +689,140 @@ class ReportsController extends Controller
                 $user->created_at->format('Y-m-d H:i'),
                 'Active'
             ]);
+        }
+    }
+
+    // Add this method to generate and save CSV report
+    public function generateAndSaveCSV(Request $request)
+    {
+        try {
+            $type = $request->get('type', 'overview');
+            $range = $request->get('range', 'month');
+            $user = Auth::user();
+            
+            $startDate = $this->getStartDate($range);
+            
+            // Generate filename
+            $filename = $type . '-report-' . now()->format('Y-m-d-His') . '.csv';
+            $filePath = 'reports/' . $filename;
+            
+            // Create CSV content and save to storage
+            $csvContent = $this->generateCSVContent($type, $startDate);
+            Storage::disk('public')->put($filePath, $csvContent);
+            
+            // Get file size
+            $fileSize = Storage::disk('public')->size($filePath);
+            
+            // Create report record in database
+            $report = Report::create([
+                'title' => ucfirst($type) . ' Report - ' . ucfirst($range),
+                'type' => $type,
+                'format' => 'CSV',
+                'file_path' => $filePath,
+                'file_size' => $fileSize,
+                'date_range' => $range,
+                'generated_at' => now(),
+                'generated_by' => $user->userId
+            ]);
+            
+            return response()->json([
+                'message' => 'Report generated successfully',
+                'report' => $report
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Helper method to generate CSV content as string
+    private function generateCSVContent($type, $startDate)
+    {
+        ob_start();
+        $file = fopen('php://output', 'w');
+        
+        // Add UTF-8 BOM
+        fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        switch ($type) {
+            case 'donations':
+                $this->writeDonationsCSV($file, $startDate);
+                break;
+            case 'requests':
+                $this->writeRequestsCSV($file, $startDate);
+                break;
+            case 'users':
+                $this->writeUsersCSV($file, $startDate);
+                break;
+            default:
+                $this->writeOverviewCSV($file, $startDate);
+        }
+        
+        fclose($file);
+        return ob_get_clean();
+    }
+
+    // Get all saved reports
+    public function getSavedReports()
+    {
+        try {
+            $reports = Report::with('generator')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($report) {
+                    return [
+                        'id' => $report->reportId,
+                        'title' => $report->title,
+                        'date' => $report->generated_at->format('Y-m-d'),
+                        'type' => $report->format,
+                        'size' => $report->formatted_size,
+                        'file_path' => $report->file_path
+                    ];
+                });
+
+            return response()->json($reports);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Download a saved report
+    public function downloadSavedReport($id)
+    {
+        try {
+            $report = Report::findOrFail($id);
+            
+            if (!Storage::disk('public')->exists($report->file_path)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+            
+            return Storage::disk('public')->download(
+                $report->file_path,
+                basename($report->file_path),
+                ['Content-Type' => 'text/csv']
+            );
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Delete a saved report
+    public function deleteSavedReport($id)
+    {
+        try {
+            $report = Report::findOrFail($id);
+            
+            // Delete file from storage
+            if (Storage::disk('public')->exists($report->file_path)) {
+                Storage::disk('public')->delete($report->file_path);
+            }
+            
+            // Delete database record
+            $report->delete();
+            
+            return response()->json(['message' => 'Report deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

@@ -135,6 +135,10 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('/reports/generate', [ReportsController::class, 'generateReport']);
     Route::get('/reports/saved', [ReportsController::class, 'getSavedReports']);
     Route::get('/reports/download-csv', [ReportsController::class, 'downloadCSV']);
+    Route::post('/reports/generate-and-save', [ReportsController::class, 'generateAndSaveCSV']);
+    Route::post('/reports/generate-and-save', [ReportsController::class, 'generateAndSaveCSV']);
+    Route::get('/reports/saved/{id}/download', [ReportsController::class, 'downloadSavedReport']);
+    Route::delete('/reports/saved/{id}', [ReportsController::class, 'deleteSavedReport']);
 });
 
 Route::middleware(['auth:sanctum', 'role:receiver'])->prefix('receiver')->group(function () {
